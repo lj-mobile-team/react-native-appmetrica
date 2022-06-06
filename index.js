@@ -48,7 +48,6 @@ type Location = {
 type AppMetricaDeviceIdReason = 'UNKNOWN' | 'NETWORK' | 'INVALID_RESPONSE';
 
 export default {
-
   activate(config: AppMetricaConfig) {
     AppMetrica.activate(config);
   },
@@ -108,5 +107,9 @@ export default {
 
   setUserProfileID(userProfileID?: string) {
     AppMetrica.setUserProfileID(userProfileID);
+  },
+    
+  async reportUserProfile(userProfileId: string, userProfile: any) {
+    return await AppMetrica.reportUserProfile(userProfileId, userProfile);
   },
 };

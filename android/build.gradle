@@ -120,7 +120,7 @@ afterEvaluate { project ->
         configurations.implementation.setCanBeResolved(true)
         configurations.api.setCanBeResolved(true)
 
-        classpath += files(project.getConfigurations().getByName('implementation').asList())
+        // classpath += files(project.getConfigurations().getByName('implementation').asList())
         include '**/*.java'
     }
 

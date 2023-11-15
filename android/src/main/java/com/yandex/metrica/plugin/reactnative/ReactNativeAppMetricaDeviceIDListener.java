@@ -6,26 +6,26 @@
  * https://yandex.com/legal/appmetrica_sdk_agreement/
  */
 
-package com.yandex.metrica.plugin.reactnative;
+package io.appmetrica.analytics.plugin.reactnative;
 
 import com.facebook.react.bridge.Callback;
-import com.yandex.metrica.AppMetricaDeviceIDListener;
+// import io.appmetrica.analytics.AppMetricaDeviceIDListener;
 
-public class ReactNativeAppMetricaDeviceIDListener implements AppMetricaDeviceIDListener {
+// public class ReactNativeAppMetricaDeviceIDListener implements AppMetricaDeviceIDListener {
 
-    private final Callback listener;
+//     private final Callback listener;
 
-    ReactNativeAppMetricaDeviceIDListener(Callback listener) {
-        this.listener = listener;
-    }
+//     ReactNativeAppMetricaDeviceIDListener(Callback listener) {
+//         this.listener = listener;
+//     }
 
-    @Override
-    public void onLoaded(/* Nullable */ String deviceId) {
-        listener.invoke(deviceId, null);
-    }
+//     @Override
+//     public void onLoaded(/* Nullable */ String deviceId) {
+//         listener.invoke(deviceId, null);
+//     }
 
-    @Override
-    public void onError(/* NonNull */ Reason reason) {
-        listener.invoke(null, reason.toString());
-    }
-}
+//     @Override
+//     public void onError(/* NonNull */ Reason reason) {
+//         listener.invoke(null, reason.toString());
+//     }
+// }

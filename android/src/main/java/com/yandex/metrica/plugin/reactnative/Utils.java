@@ -6,21 +6,21 @@
  * https://yandex.com/legal/appmetrica_sdk_agreement/
  */
 
-package com.yandex.metrica.plugin.reactnative;
+package io.appmetrica.analytics.plugin.reactnative;
 
 import android.location.Location;
 
 import com.facebook.react.bridge.ReadableMap;
-import com.yandex.metrica.PreloadInfo;
-import com.yandex.metrica.YandexMetricaConfig;
+import io.appmetrica.analytics.PreloadInfo;
+import io.appmetrica.analytics.AppMetricaConfig;
 
 import java.util.Iterator;
 import java.util.Map;
 
 abstract class Utils {
 
-    static YandexMetricaConfig toYandexMetricaConfig(ReadableMap configMap) {
-        YandexMetricaConfig.Builder builder = YandexMetricaConfig.newConfigBuilder(configMap.getString("apiKey"));
+    static AppMetricaConfig toAppMetricaConfig(ReadableMap configMap) {
+        AppMetricaConfig.Builder builder = AppMetricaConfig.newConfigBuilder(configMap.getString("apiKey"));
 
         if (configMap.hasKey("appVersion")) {
             builder.withAppVersion(configMap.getString("appVersion"));
@@ -56,7 +56,7 @@ abstract class Utils {
             builder.withSessionTimeout(configMap.getInt("sessionTimeout"));
         }
         if (configMap.hasKey("statisticsSending")) {
-            builder.withStatisticsSending(configMap.getBoolean("statisticsSending"));
+            builder.withDataSendingEnabled(configMap.getBoolean("statisticsSending"));
         }
 
         return builder.build();

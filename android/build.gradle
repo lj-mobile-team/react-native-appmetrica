@@ -37,6 +37,7 @@ buildscript {
     // ref: https://docs.gradle.org/current/userguide/tutorial_using_tasks.html#sec:build_script_external_dependencies
     if (project == rootProject) {
         repositories {
+            mavenLocal()
             google()
             jcenter()
         }
@@ -78,7 +79,7 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation 'com.yandex.android:mobmetricalib:5.0.0'
+    implementation 'io.appmetrica.analytics:analytics:6.1.0'
     implementation 'com.android.installreferrer:installreferrer:1.1.2'
 }
 
@@ -89,7 +90,7 @@ def configureReactNativePom(def pom) {
         name packageJson.title
         artifactId packageJson.name
         version = packageJson.version
-        group = "com.yandex.metrica.plugin.reactnative"
+        group = "io.appmetrica.analytics.plugin.reactnative"
         description packageJson.description
         url packageJson.repository.baseUrl
 

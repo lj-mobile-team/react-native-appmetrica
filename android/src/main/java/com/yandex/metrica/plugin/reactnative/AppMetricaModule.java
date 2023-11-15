@@ -6,7 +6,7 @@
  * https://yandex.com/legal/appmetrica_sdk_agreement/
  */
 
-package com.yandex.metrica.plugin.reactnative;
+package io.appmetrica.analytics.plugin.reactnative;
 
 import android.app.Activity;
 import android.app.Application;
@@ -22,12 +22,14 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 
-import com.yandex.metrica.YandexMetrica;
-import com.yandex.metrica.YandexMetricaConfig;
-import com.yandex.metrica.profile.Attribute;
-import com.yandex.metrica.profile.GenderAttribute;
-import com.yandex.metrica.profile.UserProfile;
-import com.yandex.metrica.profile.UserProfileUpdate;
+import io.appmetrica.analytics.AppMetrica;
+import io.appmetrica.analytics.AppMetricaConfig;
+import io.appmetrica.analytics.profile.Attribute;
+import io.appmetrica.analytics.profile.GenderAttribute;
+import io.appmetrica.analytics.profile.UserProfile;
+import io.appmetrica.analytics.profile.UserProfileUpdate;
+import io.appmetrica.analytics.StartupParamsCallback;
+import java.util.Arrays;
 
 public class AppMetricaModule extends ReactContextBaseJavaModule {
 
@@ -52,25 +54,25 @@ public class AppMetricaModule extends ReactContextBaseJavaModule {
     
     public static void staticReportAppOpen(Intent intent) {
         if (activateMetrics()) {
-            YandexMetrica.reportAppOpen(intent);
+            AppMetrica.reportAppOpen(intent);
         }
     }
 
     public static void staticReportAppOpen(Activity activity) {
         if (activateMetrics()) {
-            YandexMetrica.reportAppOpen(activity);
+            AppMetrica.reportAppOpen(activity);
         }
     }
 
     public static void staticReportAppOpen(String deeplink) {
         if (activateMetrics()) {
-            YandexMetrica.reportAppOpen(deeplink);
+            AppMetrica.reportAppOpen(deeplink);
         }
     }
 	
     public static void staticReportReferralUrl(String deeplink) {
         if (activateMetrics()) {
-            YandexMetrica.reportReferralUrl(deeplink);
+            AppMetrica.reportReferralUrl(deeplink);
         }
     }
 
@@ -88,35 +90,35 @@ public class AppMetricaModule extends ReactContextBaseJavaModule {
 
     private static void staticActivateWithApiKey(String key) {
         activateKey = key;
-        YandexMetricaConfig.Builder configBuilder = YandexMetricaConfig.newConfigBuilder(key);
-        YandexMetrica.activate(reactApplicationContext.getApplicationContext(), configBuilder.build());
+        AppMetricaConfig.Builder configBuilder = AppMetricaConfig.newConfigBuilder(key).withLogs();
+        AppMetrica.activate(reactApplicationContext.getApplicationContext(), configBuilder.build());
         Activity activity = reactApplicationContext.getCurrentActivity();
         if (activity != null) {
             Application application = activity.getApplication();
-            YandexMetrica.enableActivityAutoTracking(application);
+            AppMetrica.enableActivityAutoTracking(application);
         }
     }
 
     private static void staticActivateWithConfig(ReadableMap params) {
         activateParams = params;
-        YandexMetrica.activate(reactApplicationContext.getApplicationContext(), Utils.toYandexMetricaConfig(params));
+        AppMetrica.activate(reactApplicationContext.getApplicationContext(), Utils.toAppMetricaConfig(params));
         Activity activity = reactApplicationContext.getCurrentActivity();
         if (activity != null) {
             Application application = activity.getApplication();
-            YandexMetrica.enableActivityAutoTracking(application);
+            AppMetrica.enableActivityAutoTracking(application);
         }
     }
 
     @ReactMethod
     public void activate(ReadableMap configMap) {
-        YandexMetrica.activate(reactContext, Utils.toYandexMetricaConfig(configMap));
+        AppMetrica.activate(reactContext, Utils.toAppMetricaConfig(configMap));
         enableActivityAutoTracking();
     }
 
     private void enableActivityAutoTracking() {
         Activity activity = getCurrentActivity();
         if (activity != null) { // TODO: check
-            YandexMetrica.enableActivityAutoTracking(activity.getApplication());
+            AppMetrica.enableActivityAutoTracking(activity.getApplication());
         } else {
             Log.w(TAG, "Activity is not attached");
         }
@@ -124,22 +126,22 @@ public class AppMetricaModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getLibraryApiLevel(Promise promise) {
-        promise.resolve(YandexMetrica.getLibraryApiLevel());
+        promise.resolve(AppMetrica.getLibraryApiLevel());
     }
 
     @ReactMethod
     public void getLibraryVersion(Promise promise) {
-        promise.resolve(YandexMetrica.getLibraryVersion());
+        promise.resolve(AppMetrica.getLibraryVersion());
     }
 
     @ReactMethod
     public void pauseSession() {
-        YandexMetrica.pauseSession(getCurrentActivity());
+        AppMetrica.pauseSession(getCurrentActivity());
     }
 
     @ReactMethod
     public void reportAppOpen(String deeplink) {
-        YandexMetrica.reportAppOpen(deeplink);
+        AppMetrica.reportAppOpen(deeplink);
     }
 
     @ReactMethod
@@ -147,57 +149,79 @@ public class AppMetricaModule extends ReactContextBaseJavaModule {
         try {
             Integer.valueOf("00xffWr0ng");
         } catch (Throwable error) {
-            YandexMetrica.reportError(message, error);
+            AppMetrica.reportError(message, error);
         }
     }
 
     @ReactMethod
     public void reportEvent(String eventName, ReadableMap attributes) {
         if (attributes == null) {
-            YandexMetrica.reportEvent(eventName);
+            AppMetrica.reportEvent(eventName);
         } else {
-            YandexMetrica.reportEvent(eventName, attributes.toHashMap());
+            AppMetrica.reportEvent(eventName, attributes.toHashMap());
         }
     }
 
     @ReactMethod
     public void reportReferralUrl(String referralUrl) {
-        YandexMetrica.reportReferralUrl(referralUrl);
+        AppMetrica.reportReferralUrl(referralUrl);
     }
 
     @ReactMethod
     public void requestAppMetricaDeviceID(Callback listener) {
-        YandexMetrica.requestAppMetricaDeviceID(new ReactNativeAppMetricaDeviceIDListener(listener));
+
+        StartupParamsCallback startupParamsCallback = new StartupParamsCallback() {
+            @Override
+            public void onReceive(Result result) {
+                if (result != null) {
+                    String deviceId = result.deviceId;
+                    String deviceIdHash = result.deviceIdHash;
+                    String uuid = result.uuid;
+                    listener.invoke(deviceId, null);
+                }
+            }
+
+            @Override
+            public void onRequestError(Reason reason, Result result) {
+                listener.invoke(null, reason.toString());
+            }
+        };
+        AppMetrica.requestStartupParams(
+            reactApplicationContext.getApplicationContext(),
+            startupParamsCallback,
+            Arrays.asList(StartupParamsCallback.APPMETRICA_DEVICE_ID_HASH)
+        );
+        // AppMetrica.requestAppMetricaDeviceID(new ReactNativeAppMetricaDeviceIDListener(listener));
     }
 
     @ReactMethod
     public void resumeSession() {
-        YandexMetrica.resumeSession(getCurrentActivity());
+        AppMetrica.resumeSession(getCurrentActivity());
     }
 
     @ReactMethod
     public void sendEventsBuffer() {
-        YandexMetrica.sendEventsBuffer();
+        AppMetrica.sendEventsBuffer();
     }
 
     @ReactMethod
     public void setLocation(ReadableMap locationMap) {
-        YandexMetrica.setLocation(Utils.toLocation(locationMap));
+        AppMetrica.setLocation(Utils.toLocation(locationMap));
     }
 
     @ReactMethod
     public void setLocationTracking(boolean enabled) {
-        YandexMetrica.setLocationTracking(enabled);
+        AppMetrica.setLocationTracking(enabled);
     }
 
     @ReactMethod
     public void setStatisticsSending(boolean enabled) {
-        YandexMetrica.setStatisticsSending(reactContext, enabled);
+        AppMetrica.setDataSendingEnabled(enabled);
     }
 
     @ReactMethod
     public void setUserProfileID(String userProfileID) {
-        YandexMetrica.setUserProfileID(userProfileID);
+        AppMetrica.setUserProfileID(userProfileID);
     }
     
     @ReactMethod
@@ -271,7 +295,7 @@ public class AppMetricaModule extends ReactContextBaseJavaModule {
             UserProfile userProfile = userProfileBuilder.build();
 
             if(userProfile.getUserProfileUpdates().size() > 0) {
-                YandexMetrica.reportUserProfile(userProfile);
+                AppMetrica.reportUserProfile(userProfile);
 
                 promise.resolve(true);
             } else {
